@@ -1,0 +1,50 @@
+version: "3.5"
+services:
+  ws-server:
+    hostname: ws-server
+    networks:
+      - backnet
+    depends_on:
+      - postgres
+      - kafka
+    build:
+      context: .
+    image: ws-server
+    ports: [ '8080:8080' ]
+
+  postgres:
+    image: bitnami/postgresql:14.6.0
+    hostname: postgres
+    networks:
+      - backnet
+    restart: always
+    ports: [ '5432:5432' ]
+    environment:
+      - POSTGRES_USER=chat_write
+      - POSTGRES_PASSWORD=C7SQKr@g6SwtXNi
+      - POSTGRES_DB=chat
+
+  kafka:
+    image: 'bitnami/kafka:3.2.3'
+    hostname: kafka
+    networks:
+      - backnet
+    restart: "no"
+    privileged: true
+    ports:
+      - 2181:2181
+      - 19092:19092
+    environment:
+      - KAFKA_ENABLE_KRAFT=yes
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:19092,CONTROLLER://:2181
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:19092
+      - KAFKA_BROKER_ID=1
+      - KAFKA_CFG_NODE_ID=1
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+
+networks:
+  backnet:
